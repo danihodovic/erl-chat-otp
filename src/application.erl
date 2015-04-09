@@ -9,12 +9,7 @@
 -export([start/2, stop/1]).
 
 start(_Type, _StartArgs) ->
-    case root_supervisor:start_link() of
-        {ok, Pid} ->
-            {ok, Pid};
-        Other ->
-              {error, Other}
-    end.
+    root_supervisor:start_link(5555, 1).
 
 stop(_State) ->
     ok.
