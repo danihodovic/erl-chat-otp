@@ -61,7 +61,8 @@ broadcast_cowsay() ->
 init([]) ->
     {ok, #state{clients=[]}}.
 
-
+%% Add the client to the active list and notify all. Link to remove
+%% when client dies
 handle_call({add_client, SockType, Sock, Name}, {Pid, _Ref}, State) ->
     io:format("Client ~p connected from ~p~n", [Name, Pid]),
     link(Pid),
@@ -74,15 +75,16 @@ handle_call(stop, _From, State) ->
     {stop, normal, ok, State};
 
 handle_call(_Other, _From, State) ->
-    io:format("Server got strange message: ~p~n", [_Other]),
+    io:format("[Debug] Server got strange message: ~p~n", [_Other]),
     {reply, "???", State}.
 
-
+%% Remove client from the current list
 handle_cast({remove_client, Pid}, State) ->
     Clients = [Cli || Cli <- State#state.clients, Cli#client.pid /= Pid],
     NewState = State#state{clients=Clients},
     {noreply, NewState};
 
+%% Broadcast generic message
 handle_cast({broadcast, Msg, Pid}, State) ->
     Cli = find_client(State#state.clients, Pid),
     Str = "<" ++ Cli#client.name ++ ">" ++ Msg ++ "\n",
@@ -90,6 +92,7 @@ handle_cast({broadcast, Msg, Pid}, State) ->
     io:format(Str),
     {noreply, State};
 
+%% Broadcast the active clients to the client requesting it
 handle_cast({broadcast_active_clients, Pid}, State) ->
     Cli = find_client(State#state.clients, Pid),
     broadcast([Cli], get_active_clients(State#state.clients)),

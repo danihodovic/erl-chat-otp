@@ -13,7 +13,6 @@
 %%%===================================================================
 
 start_link(Port, No_of_acceptors) ->
-    io:format("Startlink\n"),
     supervisor:start_link({local, ?MODULE}, ?MODULE, [Port, No_of_acceptors]).
 
 %%%===================================================================
@@ -21,7 +20,6 @@ start_link(Port, No_of_acceptors) ->
 %%%===================================================================
 
 init([Port, No_of_acceptors]) ->
-    io:format("Initializing acceptors...\n"),
     {ok, Listen_sock} = gen_tcp:listen(Port, [{active, false}]),
 
     Create_workers = fun() -> {make_ref(),
@@ -31,4 +29,6 @@ init([Port, No_of_acceptors]) ->
 
     %% Creates specs for <n> number of accepting processes
     _Workers = [Create_workers() || _ <- lists:seq(0, No_of_acceptors)],
+    io:format("Initializing acceptors...\n"),
     {ok, {{one_for_one, 100, 100}, _Workers}}.
+

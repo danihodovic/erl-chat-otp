@@ -1,0 +1,8 @@
+{application, chatserver,
+ [{description, "A simple tcp server"},
+  {vsn, "0.1"},
+  {modules, [app, root_supervisor, acceptor_supervisor, server, client]},
+  {registered, [root_supervisor, acceptor_supervisor, server]},
+  {applications, [kernel, stdlib]},
+  {mod, {app, [5555, 1]}}
+ ]}.
