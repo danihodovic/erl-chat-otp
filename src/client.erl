@@ -1,11 +1,5 @@
 -module(client).
--export([start/2]).
-
-% Starts <n> number of accepting processes
-start(Port, No_of_acceptors) ->
-    server:start_link(),
-    {ok, Listen_sock} = gen_tcp:listen(Port, [{active, false}]),
-    [spawn_link(fun() -> tcp_acceptor(Listen_sock) end) || _ <- lists:seq(0, No_of_acceptors)].
+-export([tcp_acceptor/1]).
 
 % Accept a connection and spawn another process to handle that client
 tcp_acceptor(Listen_sock) ->

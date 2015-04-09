@@ -87,6 +87,7 @@ handle_cast({broadcast, Msg, Pid}, State) ->
     Cli = find_client(State#state.clients, Pid),
     Str = "<" ++ Cli#client.name ++ ">" ++ Msg ++ "\n",
     broadcast(State#state.clients, Str),
+    io:format(Str),
     {noreply, State};
 
 handle_cast({broadcast_active_clients, Pid}, State) ->
