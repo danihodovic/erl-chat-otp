@@ -1,4 +1,4 @@
--module(gen_server_otp).
+-module(server).
 
 -behaviour(gen_server).
 
