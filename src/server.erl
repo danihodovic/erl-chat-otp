@@ -46,7 +46,7 @@ add_client(SockType, Sock, Name) ->
     gen_server:call(?MODULE, {add_client, SockType, Sock, Name}).
 
 broadcast(Msg) ->
-    gen_server:call(?MODULE, {broadcast, Msg, self()}).
+    gen_server:cast(?MODULE, {broadcast, Msg, self()}).
 
 broadcast_active_clients() ->
     gen_server:cast(?MODULE, {broadcast_active_clients, self()}).
@@ -62,17 +62,19 @@ init([]) ->
     {ok, #state{clients=[]}}.
 
 
-handle_call({add_client, SockType, Sock, Name}, From, State) ->
-    link(From),
-    Client = #client{socktype=SockType, pid=From, name=Name, socket=Sock},
+handle_call({add_client, SockType, Sock, Name}, {Pid, _Ref}, State) ->
+    io:format("Client ~p connected from ~p~n", [Name, Pid]),
+    link(Pid),
+    Client = #client{socktype=SockType, pid=Pid, name=Name, socket=Sock},
     NewState = State#state{clients=[Client|State#state.clients]},
-    broadcast(NewState#state.clients, Name ++ " has joined"),
+    broadcast(NewState#state.clients, Name ++ " has joined\n"),
     {reply, ok, NewState};
 
 handle_call(stop, _From, State) ->
     {stop, normal, ok, State};
 
-handle_call(_Stuff, _From, State) ->
+handle_call(_Other, _From, State) ->
+    io:format("Server got strange message: ~p~n", [_Other]),
     {reply, "???", State}.
 
 
@@ -83,8 +85,8 @@ handle_cast({remove_client, Pid}, State) ->
 
 handle_cast({broadcast, Msg, Pid}, State) ->
     Cli = find_client(State#state.clients, Pid),
-    Msg = "<" ++ Cli#client.name ++ ">" ++ Msg ++ "\n",
-    broadcast(State#state.clients, Msg),
+    Str = "<" ++ Cli#client.name ++ ">" ++ Msg ++ "\n",
+    broadcast(State#state.clients, Str),
     {noreply, State};
 
 handle_cast({broadcast_active_clients, Pid}, State) ->
@@ -101,6 +103,7 @@ handle_cast({cowsay, Pid}, State) ->
     {noreply, State};
 
 handle_cast(_Other, State) ->
+    io:format("[Debug] Server got strange message: ~p~n", [_Other]),
     {noreply, State}.
 
 
