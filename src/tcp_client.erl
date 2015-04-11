@@ -1,4 +1,4 @@
--module(client).
+-module(tcp_client).
 -export([tcp_acceptor/1]).
 
 %%%===================================================================
@@ -22,7 +22,7 @@ client_handler(Sock) ->
     case gen_tcp:recv(Sock, 0) of
         {ok, Raw_msg} ->
             Name = hd(string:tokens(Raw_msg, "\r\n")),
-            server:add_client(tcp, Sock, Name),
+            server:add_client(Sock, Name),
             chat(Sock);
         {error, closed} ->
             ok

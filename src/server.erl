@@ -9,7 +9,7 @@
         ]).
 
 -export([
-         add_client/3,
+         add_client/2,
          broadcast/1,
          broadcast_active_clients/0,
          broadcast_cowsay/0]).
@@ -25,7 +25,7 @@
 -define(SERVER, ?MODULE).
 
 -record(state, {clients}).
--record(client, {socktype, pid, socket, name}).
+-record(client, {pid, socket, name}).
 
 %%%===================================================================
 %%% Server usage API
@@ -42,8 +42,8 @@ stop() ->
 %%% Client API
 %%%===================================================================
 
-add_client(SockType, Sock, Name) ->
-    gen_server:call(?MODULE, {add_client, SockType, Sock, Name}).
+add_client(Sock, Name) ->
+    gen_server:call(?MODULE, {add_client, Sock, Name}).
 
 broadcast(Msg) ->
     gen_server:cast(?MODULE, {broadcast, Msg, self()}).
@@ -63,10 +63,10 @@ init([]) ->
 
 %% Add the client to the active list and notify all. Link to remove
 %% when client dies
-handle_call({add_client, SockType, Sock, Name}, {Pid, _Ref}, State) ->
+handle_call({add_client, Sock, Name}, {Pid, _Ref}, State) ->
     io:format("Client ~p connected from ~p~n", [Name, Pid]),
     link(Pid),
-    Client = #client{socktype=SockType, pid=Pid, name=Name, socket=Sock},
+    Client = #client{pid=Pid, name=Name, socket=Sock},
     NewState = State#state{clients=[Client|State#state.clients]},
     broadcast(NewState#state.clients, Name ++ " has joined\n"),
     {reply, ok, NewState};
@@ -132,13 +132,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 
 broadcast(Clients, Msg) ->
-    Fun = fun(Cli) ->
-            case Cli#client.socktype of
-                tcp -> gen_tcp:send(Cli#client.socket, Msg);
-                udp -> gen_udp:send(Cli#client.socket, Msg)
-            end
-          end,
-    lists:foreach(Fun, Clients).
+    [gen_tcp:send(Cli#client.socket, Msg) || Cli <- Clients].
 
 
 find_client(Clients, Pid) ->
