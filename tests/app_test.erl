@@ -5,6 +5,7 @@
 
 %% End to end echo test testing the tcp and messages.
 %% Todo: Less implementation specific rewrite
+%% NOTE: Placing tcp calls in _asserts doesn't seem to execute them!
 echo_test_() ->
     {setup,
      fun start/0,
