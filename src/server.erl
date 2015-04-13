@@ -59,6 +59,7 @@ broadcast_cowsay() ->
 %%%===================================================================
 
 init([]) ->
+    process_flag(trap_exit, true),
     {ok, #state{clients=[]}}.
 
 %% Add the client to the active list and notify all. Link to remove
