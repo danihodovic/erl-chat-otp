@@ -1,15 +1,33 @@
+%%%===================================================================
+%%% Module responsible for spawning tcp accepting processes and
+%%% client handling.
+%%%
+%%% Todo: Rewrite to gen_fsm
+%%%===================================================================
 -module(tcp_client).
--export([tcp_acceptor/1]).
+-export([tcp_spawn/1]).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
+%%% In order not to block the supervisor instantiation, we spawn
+%%% processes that wait for connections and link them. If they crash,
+%%% we crash and the supervisor restarts us.
+tcp_spawn(Listen_sock) ->
+    spawn_link(fun() -> tcp_acceptor(Listen_sock) end),
+    {ok, self()}.
 
+
+%%%===================================================================
+%%% Tcp accepting processes
+%%%===================================================================
 % Accept a connection and spawn another process to handle that client
 tcp_acceptor(Listen_sock) ->
     {ok, Sock} = gen_tcp:accept(Listen_sock),
     spawn(fun() -> client_handler(Sock) end),
     tcp_acceptor(Listen_sock).
+
+
 
 
 %%%===================================================================

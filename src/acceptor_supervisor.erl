@@ -23,7 +23,7 @@ init([Port, No_of_acceptors]) ->
     {ok, Listen_sock} = gen_tcp:listen(Port, [{active, false}]),
 
     Create_workers = fun() -> {make_ref(),
-                        {tcp_client, tcp_acceptor, [Listen_sock]},
+                        {tcp_client, tcp_spawn, [Listen_sock]},
                         transient, brutal_kill, worker, [client]}
                      end,
 
